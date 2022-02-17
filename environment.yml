@@ -1,0 +1,17 @@
+name: gr2-env
+
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - astropy
+  - notebook
+  - numpy
+  - pandas
+  - pip
+  - plotly
+  - python = 3.8
+  - scipy
+  - sympy
+  - matplotlib
