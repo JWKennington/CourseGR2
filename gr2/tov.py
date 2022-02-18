@@ -166,8 +166,8 @@ def post_process(radii: numpy.array, raw_result: numpy.ndarray, d_rad: float = 0
 
 
 class SolutionSequence:
-    def __init__(self, densities: numpy.ndarray, solutions: typing.Tuple[Solution]):
-        self.densities = densities
+    def __init__(self, densities_rest: numpy.ndarray, solutions: typing.Tuple[Solution]):
+        self.densities_rest = densities_rest
         self.solutions = solutions
 
     def _slice_attr_(self, attr: str):
@@ -186,14 +186,14 @@ class SolutionSequence:
         return self._slice_attr_('surface_radius')
 
     @staticmethod
-    def from_densities(densities_init: numpy.ndarray, d_rad: float = 0.01, poly_index: float = 1.0, poly_gas_const: float = 1.0, rad_max: float = 1.0,
+    def from_densities(densities_rest: numpy.ndarray, d_rad: float = 0.01, poly_index: float = 1.0, poly_gas_const: float = 1.0, rad_max: float = 1.0,
                        solver: types.FunctionType = integrate_manual):
         if isinstance(rad_max, list):
-            solns = tuple(solver(density_init, d_rad, poly_index, poly_gas_const, rad_max) for density_init, rad_max in zip(densities_init, rad_max))
+            solns = tuple(solver(density_rest, d_rad, poly_index, poly_gas_const, rad_max) for density_rest, rad_max in zip(densities_rest, rad_max))
         else:
-            solns = tuple(solver(density_init, d_rad, poly_index, poly_gas_const, rad_max) for density_init in densities_init)
+            solns = tuple(solver(density_rest, d_rad, poly_index, poly_gas_const, rad_max) for density_rest in densities_rest)
 
-        return SolutionSequence(densities_init, solns)
+        return SolutionSequence(densities_rest, solns)
 
 
 def generate_plot(index: float, gas_const: float, d_rad: float, densities: numpy.ndarray, solver: types.FunctionType, rad_max: float):
@@ -206,8 +206,8 @@ def generate_plot(index: float, gas_const: float, d_rad: float, densities: numpy
 
     fig = pyplot.figure()
     ax = fig.add_axes([0.15, 0.15, 0.95 - 0.15, 0.95 - 0.15])
-    ax.plot(seq.densities, seq.interior_mass, "k-", label=r"$M$")
-    ax.plot(seq.densities, seq.rest_mass, "k--", label=r"$M_0$")
+    ax.plot(seq.densities_rest, seq.interior_mass, "k-", label=r"$M$")
+    ax.plot(seq.densities_rest, seq.rest_mass, "k--", label=r"$M_0$")
     ax.legend(loc="best")
     ax.set_xlabel(r"$\rho_0$ [P.U.]")
     ax.set_ylabel(r"$M$ [P.U.]")
