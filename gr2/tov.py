@@ -9,25 +9,47 @@ import typing
 
 import numpy
 from matplotlib import pyplot
-from scipy import integrate
+from scipy import integrate, optimize
+
+
+def scale_density(rho_bar: float, index: float, gas_const: float):
+    return rho_bar * (gas_const ** (-index))
+
+
+def scale_pressure(pressure_bar: float, index: float, gas_const: float):
+    return pressure_bar * (gas_const ** (-index))
+
+
+def scale_radius(radius_bar: float, index: float, gas_const: float):
+    return radius_bar * (gas_const ** (index / 2))
 
 
 def polytropic_pressure(density_rest: float, index: float = 1.0, gas_const: float = 1.0):
     return gas_const * density_rest ** (1.0 + 1.0 / index)
 
 
-def polytropic_density_rest(pressure: float, index: float = 1.0, gas_const: float = 1.0):
-    return (pressure / gas_const) ** (index / (index + 1))
+def polytropic_density_rest(density: float = None, pressure: float = None, index: float = 1.0, gas_const: float = 1.0):
+    if len([x for x in (density, pressure) if x is not None]) != 1:
+        raise ValueError('Must specify only one of {{density_init, pressure}}')
+
+    if pressure is not None:
+        return (pressure / gas_const) ** (index / (index + 1))
 
 
-def polytropic_density(density_rest: float = None, pressure: float = None, index: float = 1.0, gas_constant: float = 1.0):
+    return optimize.fsolve()
+
+
+
+
+
+def polytropic_density(density_rest: float = None, pressure: float = None, index: float = 1.0, gas_const: float = 1.0):
     if len([x for x in (density_rest, pressure) if x is not None]) != 1:
         raise ValueError('Must specify only one of {{density_init, pressure}}')
 
     if density_rest is not None:
-        return index * gas_constant * density_rest ** (1.0 / index)
+        return index * gas_const * density_rest ** (1.0 / index)
 
-    return index * pressure + polytropic_density_rest(pressure)
+    return index * pressure + polytropic_density_rest(pressure=pressure)
 
 
 def d_mass_d_rad(radius: float, density: float):
@@ -95,7 +117,7 @@ def integrate_manual(density_rest: float, d_rad: float = 0.01, poly_index: float
     save_state(radius, state)
 
     while True:
-        density = polytropic_density(pressure=state.pressure, index=poly_index, gas_constant=poly_gas_const)
+        density = polytropic_density(pressure=state.pressure, index=poly_index, gas_const=poly_gas_const)
         deriv_arr = d_state_d_rad(radius, state, density=density)
         state = State.from_array(state.to_array() + deriv_arr * d_rad)
         save_state(radius, state)
@@ -116,7 +138,7 @@ def integrate_scipy(density_rest: float, d_rad: float = 0.01, poly_index: float 
 
     def integrand(radius, state_arr):
         state = State.from_array(state_arr)
-        density = polytropic_density(pressure=state.pressure, index=poly_index, gas_constant=poly_gas_const)
+        density = polytropic_density(pressure=state.pressure, index=poly_index, gas_const=poly_gas_const)
         dy = d_state_d_rad(radius=radius, state=state, density=density)
         return dy
 
